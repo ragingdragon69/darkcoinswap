@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NFT Prize Opt-In</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=DM+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+
+
+<style>
+    :root {
+      --bg:      #080b14; --surface: #0e1220; --border:  #1e2640;
+      --border2: #2a3560; --text:    #c8d0e8; --muted:   #5a6480;
+      --accent:  #7b5cf0; --success: #22c97a; --warn:    #f5a623;
+      --gold:    #FFD700;
+      --mono:    'Space Mono', monospace; --sans: 'DM Sans', sans-serif;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: var(--sans); background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; align-items: flex-start;
+      justify-content: center; padding: 24px 16px 48px;
+    }
+    body::before {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+      background-image:
+        linear-gradient(rgba(255,215,0,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,215,0,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .wrap { position:relative; z-index:1; width:100%; max-width:440px; }
+
+    .header { text-align:center; padding:32px 0 24px; }
+    .logo-ring {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:64px; height:64px; border-radius:50%;
+      border:1.5px solid rgba(255,215,0,.4); background:var(--surface);
+      font-size:32px; margin-bottom:14px;
+      box-shadow:0 0 32px rgba(255,215,0,.15);
+    }
+    .header h1 { font-family:var(--mono); font-size:18px; font-weight:700; color:#fff; }
+    .header p  { font-size:13px; color:var(--muted); margin-top:4px; }
+
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:12px; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); }
+    .card-title  { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+    .card-body   { padding:16px 18px; }
+
+    .asset-row {
+      display:flex; align-items:center; gap:14px;
+      padding:14px 18px; background:rgba(255,215,0,.05);
+      border:1px solid rgba(255,215,0,.2); border-radius:12px;
+      margin-bottom:12px;
+    }
+    .asset-icon  { font-size:36px; }
+    .asset-name  { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--gold); }
+    .asset-id    { font-size:12px; color:var(--muted); margin-top:3px; }
+
+    .detail-row { display:flex; justify-content:space-between; align-items:center;
+                  padding:6px 0; border-bottom:1px solid var(--border); font-size:13px; }
+    .detail-row:last-child { border-bottom:none; }
+    .detail-row .label { color:var(--muted); }
+    .detail-row .value { color:#fff; font-weight:600; font-family:var(--mono); font-size:12px; }
+
+    .addr-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; margin-bottom:12px; }
+    .addr-label { font-size:10px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin-bottom:5px; }
+    .addr-value { font-family:var(--mono); font-size:11px; color:#8899cc; word-break:break-all; line-height:1.5; }
+
+    .action-section { padding:4px 18px 18px; display:flex; flex-direction:column; gap:8px; }
+    .sign-btn {
+      width:100%; padding:16px; border-radius:12px; border:none;
+      font-family:var(--sans); font-size:15px; font-weight:600;
+      background:var(--accent); color:#fff; cursor:pointer;
+      box-shadow:0 4px 20px rgba(123,92,240,.3); transition:all .2s ease;
+    }
+    .sign-btn:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 6px 28px rgba(123,92,240,.4); }
+    .sign-btn:disabled { background:var(--border); color:var(--muted); cursor:not-allowed; box-shadow:none; }
+    .sign-btn.success { background:var(--success); box-shadow:0 4px 20px rgba(34,201,122,.3); }
+
+    .wallet-row { display:flex; gap:8px; }
+    .wallet-btn {
+      flex:1; padding:11px; border-radius:10px; border:1px solid var(--border2);
+      background:var(--bg); color:var(--text); font-family:var(--sans);
+      font-size:13px; font-weight:500; cursor:pointer; transition:all .15s;
+    }
+    .wallet-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .wallet-btn.active { border-color:var(--success); color:var(--success); background:rgba(34,201,122,.06); }
+
+    .status-box { padding:14px 18px; border-radius:12px; border:1px solid; font-size:13px; margin-bottom:12px; line-height:1.6; }
+    .status-info    { background:rgba(123,92,240,.08); border-color:rgba(123,92,240,.3); color:#b39dff; }
+    .status-success { background:rgba(34,201,122,.08);  border-color:rgba(34,201,122,.3);  color:var(--success); }
+    .status-error   { background:rgba(255,80,80,.08);   border-color:rgba(255,80,80,.3);   color:#ff8080; }
+    .status-warn    { background:rgba(245,166,35,.08);  border-color:rgba(245,166,35,.3);  color:var(--warn); }
+
+    .step-indicator { display:flex; align-items:center; gap:8px; padding:16px 18px 14px; font-size:12px; color:var(--muted); font-family:var(--mono); }
+    .step { display:flex; align-items:center; gap:4px; }
+    .step-num { width:20px; height:20px; border-radius:50%; border:1px solid; display:flex; align-items:center; justify-content:center; font-size:10px; }
+    .step.done .step-num   { border-color:var(--success); color:var(--success); }
+    .step.active .step-num { border-color:var(--accent);  color:var(--accent);  }
+    .step.pending .step-num { border-color:var(--muted); }
+    .step-line { flex:1; height:1px; background:var(--border); }
+
+    .help { text-align:center; font-size:12px; color:var(--muted); padding:8px 0 4px; line-height:1.7; }
+    #main-content { display:none; }
+
+    .what-is-optin {
+      background:rgba(255,215,0,.04); border:1px solid rgba(255,215,0,.15);
+      border-radius:10px; padding:12px 16px; margin-bottom:12px;
+      font-size:12px; color:var(--muted); line-height:1.7;
+    }
+    .what-is-optin strong { color:var(--text); }
+  </style>
+<link href="../assets/darkcoin.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="wrap"><p style="text-align:center;color:#e2c17c;font:12px Arial;margin:0 0 20px">DESIGN PREVIEW · All wallet controls disabled</p>
+<div class="header">
+<div class="dc-brand">DARK COIN</div>
+<div class="logo-ring">🏆</div>
+<h1>NFT Prize Opt-In</h1>
+<p>One quick step before claiming your dungeon prize</p>
+</div>
+<div class="status-box status-info" id="status-box" style="display:none">Loading asset details…</div>
+<div id="main-content" style="display:block">
+<!-- Asset summary -->
+<div class="asset-row">
+<div class="asset-icon">🎁</div>
+<div>
+<div class="asset-name" id="asset-name">NFT prize preview</div>
+<div class="asset-id">Asset ID: <span id="asset-id-display">Example asset</span></div>
+</div>
+</div>
+<div class="what-is-optin">
+<strong>What is an opt-in?</strong><br/>
+      On Algorand, your wallet must opt into an asset before it can receive it.
+      This is a free, one-time transaction that costs only a small network fee (~0.001 ALGO).
+    </div>
+<div class="card">
+<div class="card-header"><span class="card-title">Transaction Details</span></div>
+<div class="card-body">
+<div class="detail-row">
+<span class="label">Action</span>
+<span class="value">Opt-In (0 amount, self-transfer)</span>
+</div>
+<div class="detail-row">
+<span class="label">Asset ID</span>
+<span class="value" id="detail-assetid">Example asset</span>
+</div>
+<div class="detail-row">
+<span class="label">Fee</span>
+<span class="value">~0.001 ALGO (network fee only)</span>
+</div>
+</div>
+</div>
+<div class="addr-card">
+<div class="addr-label">Opting in with wallet</div>
+<div class="addr-value" id="addr-display">Your registered wallet appears here</div>
+</div>
+<div class="card">
+<div class="card-header"><span class="card-title">Connect &amp; Opt In</span></div>
+<div class="step-indicator">
+<div class="step active" id="step-connect">
+<div class="step-num">1</div>
+<span>Connect</span>
+</div>
+<div class="step-line"></div>
+<div class="step pending" id="step-sign">
+<div class="step-num">2</div>
+<span>Opt In</span>
+</div>
+<div class="step-line"></div>
+<div class="step pending" id="step-done">
+<div class="step-num">3</div>
+<span>Claim</span>
+</div>
+</div>
+<div class="action-section">
+<div class="wallet-row">
+<button class="wallet-btn" disabled="" id="btn-pera" type="button">🔵 Pera</button>
+<button class="wallet-btn" disabled="" id="btn-defly" type="button">🟢 Defly</button>
+</div>
+<button class="sign-btn" disabled="" id="sign-btn" type="button">
+          Connect a wallet first
+        </button>
+</div>
+</div>
+<p class="help">
+      After approving the opt-in, return to Discord<br/>
+      and tap <strong>🎁 Claim Prize</strong> — the bot sends your NFT automatically.
+    </p>
+</div>
+</div>
+
+</body>
+</html>
