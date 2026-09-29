@@ -1,23 +1,33 @@
-# Dark Coin wallet verification rollout
+# Dark Coin wallet verification — development build
 
-## Current stage
-Visual theme and a non-transactional preview only. Wallet verification has not been implemented. Existing transaction JavaScript is unchanged; no live bot links have been migrated.
+## Status
+The standalone verification page now signs an exact zero-ALGO MainNet payment through the existing Pera/Defly bundle. The paired bot code is staged separately for review; neither production activation nor a real-wallet acceptance test has occurred. The bot, not browser state, decides ownership. Main and the old BasicQuilt production site remain unchanged.
 
-## Approved rules
-- Existing registered users retain normal gameplay, balances, and accounts.
-- Existing users must verify before withdrawing GOLD. Check before debiting or broadcasting.
-- New users verify before registration completes.
-- A wallet change remains pending until the replacement wallet is verified.
-- Verified users do not repeat verification unless their wallet changes.
-- GOLD opt-in and wallet ownership verification are separate operations.
+## Preserved behavior
+Existing store, swap, opt-in and prize-upload transaction scripts are unchanged. Approved charcoal/gold styling remains. Existing accounts retain gameplay and hybrid GOLD. New accounts must verify before activation; replacements remain pending until proof succeeds. Verification is separate from GOLD opt-in.
 
-## Implementation requirements
-A unique expiring challenge is bound to the Discord account and claimed wallet. A confirmed zero-ALGO payment must match the expected network, sender, receiver, and exact challenge note. Reject rekey/close operations, reused challenges/transactions, and wallets verified to another Discord account. The browser never decides verification status; the bot verifies chain data. Final account binding and verification must not leave the legacy account and ecosystem wallet stores inconsistent.
+## Implementation
+An expiring challenge is tied to the Discord user, claimed wallet and expected receiver. This page accepts that challenge in the fragment, connects the requested wallet and signs only a zero-ALGO payment with the exact note. It rejects a wrong network, excessive suggested fee or expired link. No rekey or close fields are constructed. Transaction identity is saved in session storage before broadcast; ambiguous sends are not blindly repeated.
 
-## Required tests before cutover
-Wrong wallet/network/note/receiver, expired or reused challenges, duplicate clicks, cancellation, account conflicts, wallet changes, and failed database writes. Exercise existing Store payment, NFT opt-in, swap, and prize deposit flows on desktop/mobile. Inspect transaction fields before signing. No real payment is authorized by a UI test.
+The paired bot independently queries MainNet with bounded response size/time, checks confirmed sender/receiver/note/amount and challenge validity, and consumes the challenge with the account update. Withdrawal ownership checks precede reservation; repeated confirmation uses the same withdrawal identity.
+
+## Validation performed
+- 18 isolated bot/database integration checks, including forged/expired/replayed proofs, binding rollback, GOLD preservation and duplicate withdrawal confirmation.
+- 7 signing-controller scenarios with an actual SDK transaction builder and mocked wallet/network: success, wrong wallet, cancellation, uncertain send, wrong network, expired link and reload.
+- Existing slash-command definitions unchanged when feature flags are off; only the two new commands are conditionally added.
+- Assembled bot source: 961 static SQL statements compile against copied schemas; syntax checks pass.
+- Browser rendering and real Pera/Defly signing remain required before production activation. The available cloud browser cannot open the local preview URL; no claim of fresh visual or live-wallet acceptance is made.
+
+## Deployment order
+1. Review only the new verification/withdrawal prompts. Existing game messages are not rewritten.
+2. Publish/test this fork, keeping the old site available.
+3. Back up the current live bot before replacing only the changed/new bot files.
+4. Set STORE_PAGE_BASE to the published fork's /store URL; paired bot code derives opt-in, swap, prize-upload and verification links from it.
+5. Enable WALLET_VERIFICATION_ENABLED for a controlled verification test; keep ECOSYSTEM_GOLD_WITHDRAWALS_ENABLED disabled.
+6. Owner signs the zero-ALGO transaction in their own wallet. Confirm Discord ownership and preserved balances.
+7. Enable withdrawals only after this passes and custody address/signer, ASA opt-in, reserve funding and configured limits are checked. Perform one small controlled withdrawal.
+
+Optional WALLET_VERIFICATION_PAGE_BASE and WALLET_VERIFICATION_RECEIVER override their derived defaults. No new web backend or production dependency is required. Never put bot credentials in this public site.
 
 ## Rollback
-Website baseline: commit 1bf23bcfeb5e5df03e9fc519fbd805508a585617, branch rollback/pre-wallet-verification-2026-09-28. Existing site remains https://basicquilt.github.io/darkcoinswap/ and existing bot links remain there until approval.
-
-Before bot deployment, make a fresh stopped-server backup and retain the exact previous changed files/config. A rollback after players resume should restore code/config without overwriting newer player data. Never restore a stale database over live progress or replay confirmed withdrawals. Confirm compatibility of the prior code with any additive schema before release. Website baseline is preserved; a full bot rollback drill is still pending.
+Disable the two feature flags and restore the prior website URL if needed. Keep the new database records and existing balances; do not restore a stale financial DB after transactions have occurred. Code rollback must retain the latest purchase-safety fixes. Reconcile any pending withdrawal before switching off its recovery lifecycle. Do not delete ownership history or payment rows as part of rollback.
