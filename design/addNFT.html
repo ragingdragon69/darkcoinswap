@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dungeon of Champions — Add NFT Prize</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+
+
+<style>
+:root{
+  --bg:#090b10;
+  --panel:#11151d;
+  --panel2:#171c26;
+  --border:#262e3f;
+  --text:#eef2ff;
+  --muted:#8f9bb7;
+
+  --gold:#d9aa39;
+  --gold2:#f3cb69;
+
+  --green:#2ecc71;
+  --red:#ff6b6b;
+
+  --shadow:0 24px 80px rgba(0,0,0,.45);
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top right, rgba(217,170,57,.12), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(255,255,255,.03), transparent 24%),
+    var(--bg);
+
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:24px;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+
+  background-size:38px 38px;
+  pointer-events:none;
+}
+
+.wrap{
+  width:100%;
+  max-width:560px;
+  position:relative;
+  z-index:1;
+}
+
+.card{
+  background:linear-gradient(
+    180deg,
+    rgba(255,255,255,.03),
+    rgba(255,255,255,.01)
+  );
+
+  border:1px solid var(--border);
+  border-radius:24px;
+
+  overflow:hidden;
+
+  backdrop-filter:blur(14px);
+
+  box-shadow:var(--shadow);
+}
+
+.hero{
+  padding:36px 32px 28px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(217,170,57,.14),
+      rgba(217,170,57,.04)
+    );
+}
+
+.hero-icon{
+  width:72px;
+  height:72px;
+
+  border-radius:20px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:34px;
+
+  background:rgba(217,170,57,.12);
+  border:1px solid rgba(217,170,57,.25);
+
+  margin-bottom:18px;
+}
+
+.hero h1{
+  font-family:'Cinzel',serif;
+  font-size:30px;
+  line-height:1.2;
+  color:var(--gold2);
+}
+
+.hero p{
+  margin-top:10px;
+  color:var(--muted);
+  line-height:1.6;
+  font-size:15px;
+}
+
+.content{
+  padding:28px 32px 32px;
+}
+
+.status{
+  display:none;
+
+  padding:14px 16px;
+  border-radius:16px;
+
+  margin-bottom:20px;
+
+  font-size:14px;
+  line-height:1.6;
+}
+
+.status.show{
+  display:block;
+}
+
+.status.info{
+  background:rgba(90,140,255,.10);
+  border:1px solid rgba(90,140,255,.25);
+  color:#b7caff;
+}
+
+.status.success{
+  background:rgba(46,204,113,.10);
+  border:1px solid rgba(46,204,113,.25);
+  color:#9af0bf;
+}
+
+.status.error{
+  background:rgba(255,107,107,.10);
+  border:1px solid rgba(255,107,107,.25);
+  color:#ffbcbc;
+}
+
+.status.loading{
+  background:rgba(217,170,57,.10);
+  border:1px solid rgba(217,170,57,.25);
+  color:#f7d988;
+}
+
+.grid{
+  display:grid;
+  gap:14px;
+  margin-bottom:26px;
+}
+
+.info{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+}
+
+.label{
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:8px;
+  font-weight:700;
+}
+
+.value{
+  color:var(--text);
+  word-break:break-word;
+  line-height:1.5;
+}
+
+.value.name{
+  font-size:20px;
+  font-weight:700;
+  color:var(--gold2);
+}
+
+.wallet{
+  display:none;
+
+  align-items:center;
+  gap:10px;
+
+  background:rgba(46,204,113,.08);
+  border:1px solid rgba(46,204,113,.2);
+
+  padding:12px 16px;
+  border-radius:16px;
+
+  margin-bottom:22px;
+}
+
+.wallet.show{
+  display:flex;
+}
+
+.wallet-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--green);
+}
+
+.wallet span{
+  color:#bff7d2;
+  font-size:14px;
+}
+
+.wallet-buttons{
+  display:flex;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.btn{
+  border:none;
+  outline:none;
+
+  cursor:pointer;
+
+  transition:.2s ease;
+
+  border-radius:18px;
+
+  font-weight:700;
+  font-size:15px;
+
+  padding:16px 18px;
+}
+
+.btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.btn-wallet{
+  flex:1;
+
+  background:var(--panel2);
+  color:var(--text);
+
+  border:1px solid var(--border);
+}
+
+.btn-wallet:hover:not(:disabled){
+  transform:translateY(-1px);
+  border-color:rgba(217,170,57,.35);
+}
+
+.btn-wallet.active{
+  border-color:rgba(46,204,113,.4);
+  color:#bff7d2;
+  background:rgba(46,204,113,.08);
+}
+
+.btn-send{
+  width:100%;
+
+  background:linear-gradient(
+    135deg,
+    #b7861f,
+    #e0ba5c
+  );
+
+  color:#1d1405;
+
+  box-shadow:
+    0 10px 32px rgba(217,170,57,.24);
+
+  margin-top:10px;
+}
+
+.btn-send:hover:not(:disabled){
+  transform:translateY(-1px);
+}
+
+.btn-send.success{
+  background:linear-gradient(
+    135deg,
+    #1f8f52,
+    #38d67a
+  );
+
+  color:white;
+}
+
+.tx-link{
+  display:none;
+  margin-top:18px;
+
+  text-align:center;
+  color:var(--gold2);
+
+  text-decoration:none;
+  font-weight:600;
+}
+
+.tx-link:hover{
+  text-decoration:underline;
+}
+
+.footer{
+  margin-top:20px;
+  text-align:center;
+  color:rgba(255,255,255,.35);
+  font-size:13px;
+}
+
+.spinner{
+  width:14px;
+  height:14px;
+  border-radius:50%;
+
+  border:2px solid rgba(255,255,255,.2);
+  border-top-color:currentColor;
+
+  display:inline-block;
+
+  animation:spin .7s linear infinite;
+
+  margin-right:8px;
+  vertical-align:-2px;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+</style>
+<link href="../assets/darkcoin.css?v=20260928d" rel="stylesheet"/>
+</head>
+<body>
+<div class="wrap"><p style="text-align:center;color:#e2c17c;font:12px Arial;margin:0 0 20px">DESIGN PREVIEW · All wallet controls disabled</p>
+<div class="card">
+<div class="hero">
+<div class="dc-brand">DARK COIN</div>
+<div class="hero-icon">🏆</div>
+<h1>Add NFT Prize</h1>
+<p>
+        Transfer your NFT into the Dungeon of Champions prize pool.
+        Connect your wallet and sign the transaction below.
+      </p>
+</div>
+<div class="content">
+<div class="status loading show" id="status" style="display:none">
+<span id="status-text">
+<span class="spinner"></span>
+          Loading prize data...
+        </span>
+</div>
+<div class="wallet" id="wallet-badge" style="display:none">
+<div class="wallet-dot"></div>
+<span id="wallet-addr">Wallet Connected</span>
+</div>
+<div class="grid" id="info-grid"></div>
+<div class="wallet-buttons">
+<button class="btn btn-wallet" disabled="" id="btn-pera" type="button">
+          🔵 Pera
+        </button>
+<button class="btn btn-wallet" disabled="" id="btn-defly" type="button">
+          🟢 Defly
+        </button>
+</div>
+<button class="btn btn-send" disabled="" id="btn-send" type="button">
+        Connect Wallet First
+      </button>
+<a class="tx-link" href="#" id="tx-link" rel="noopener" target="_blank">
+        View Transaction ↗
+      </a>
+</div>
+</div>
+<div class="footer">
+    Powered by Algorand • Dungeon of Champions
+  </div>
+</div>
+
+</body>
+</html>

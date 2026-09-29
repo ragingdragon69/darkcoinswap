@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>⚔️ Dungeon Store</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Crimson+Text:ital,wght@0,400;0,600;1,400&amp;display=swap" rel="stylesheet"/>
+
+
+<style>
+    :root {
+      --blood:    #8B0000;
+      --ember:    #c0392b;
+      --gold:     #d4a942;
+      --gold-dim: #9a7a2a;
+      --parchment:#e8d8b0;
+      --stone:    #1a1410;
+      --slate:    #221a14;
+      --shadow:   #0d0a07;
+      --success:  #2d6a2d;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--shadow);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139,0,0,0.18) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Crimson Text', Georgia, serif;
+      color: var(--parchment);
+      padding: 24px 16px;
+    }
+
+    .frame {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .frame::before, .frame::after {
+      content: '';
+      position: absolute;
+      width: 40px; height: 40px;
+      border-color: var(--gold-dim);
+      border-style: solid;
+      opacity: 0.6;
+    }
+    .frame::before { top: -4px; left: -4px; border-width: 2px 0 0 2px; }
+    .frame::after  { bottom: -4px; right: -4px; border-width: 0 2px 2px 0; }
+
+    .card {
+      background: linear-gradient(160deg, var(--slate) 0%, var(--stone) 100%);
+      border: 1px solid rgba(212,169,66,0.25);
+      border-radius: 4px;
+      padding: 36px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(192,57,43,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .header { text-align: center; margin-bottom: 28px; }
+
+    .sigil {
+      font-size: 2.4rem;
+      line-height: 1;
+      display: block;
+      margin-bottom: 10px;
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(192,57,43,0.5)); }
+      50%       { filter: drop-shadow(0 0 20px rgba(212,169,66,0.7)); }
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-style: italic;
+      color: rgba(232,216,176,0.5);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      opacity: 0.4;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+    }
+    .divider::before { background: linear-gradient(to right, transparent, var(--gold-dim)); }
+    .divider::after  { background: linear-gradient(to left,  transparent, var(--gold-dim)); }
+    .divider span { font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--gold-dim); letter-spacing: 0.2em; }
+
+    /* Loading */
+    #loading { text-align: center; padding: 32px 0; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(212,169,66,0.15);
+      border-top-color: var(--gold-dim);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: rgba(232,216,176,0.45); font-style: italic; font-size: 1rem; }
+
+    /* Item card */
+    .item-card {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(212,169,66,0.2);
+      border-radius: 3px;
+      padding: 20px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .item-emoji { font-size: 2rem; display: block; margin-bottom: 8px; }
+    .item-name  { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold); margin-bottom: 6px; }
+    .item-desc  { color: rgba(232,216,176,0.6); font-size: 0.95rem; line-height: 1.5; margin-bottom: 14px; }
+    .item-price { font-family: 'Cinzel', serif; font-size: 1.15rem; color: #7cfc00; font-weight: 600; }
+
+    /* Step label */
+    .step-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(212,169,66,0.5);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    /* Wallet address display */
+    .wallet-addr {
+      text-align: center;
+      font-size: 0.75rem;
+      color: rgba(232,216,176,0.35);
+      word-break: break-all;
+      margin: 10px 0 6px;
+      font-style: italic;
+    }
+    .wallet-addr.connected { color: rgba(124,252,0,0.6); }
+
+    /* Wallet buttons */
+    .wallet-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .wallet-btn {
+      flex: 1;
+      padding: 13px 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(212,169,66,0.2);
+      background: rgba(0,0,0,0.35);
+      color: var(--parchment);
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .wallet-btn:hover  { border-color: var(--gold); }
+    .wallet-btn.active { border-color: #7cfc00; color: #b7ff9d; background: rgba(124,252,0,0.08); }
+
+    /* Pay button */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 13px 20px;
+      border: none;
+      border-radius: 3px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+
+    .btn-pay {
+      background: linear-gradient(135deg, #3a1500, #5a1a00);
+      border: 1px solid rgba(212,169,66,0.5);
+      color: var(--gold);
+    }
+    .btn-pay:hover:not(:disabled) {
+      border-color: var(--gold);
+      box-shadow: 0 0 16px rgba(212,169,66,0.25);
+    }
+
+    /* Status box */
+    .status {
+      border-radius: 3px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-top: 14px;
+      border: 1px solid transparent;
+      display: none;
+    }
+    .status.show { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    .status-info    { background: rgba(30,60,100,0.4);  border-color: rgba(60,120,200,0.3);  color: #a8c8ff; }
+    .status-success { background: rgba(20,70,20,0.5);   border-color: rgba(80,160,80,0.4);   color: #a8ffa8; }
+    .status-error   { background: rgba(100,10,10,0.5);  border-color: rgba(180,40,40,0.4);   color: #ffb0b0; }
+    .status-warn    { background: rgba(100,60,0,0.4);   border-color: rgba(180,120,0,0.3);   color: #ffd88a; }
+
+    .status a    { color: inherit; text-decoration: underline; text-decoration-style: dotted; }
+    .status code { font-family: monospace; font-size: 0.82rem; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 2px; word-break: break-all; }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(232,216,176,0.25);
+      font-style: italic;
+      margin-top: 18px;
+    }
+  </style>
+<link href="../assets/darkcoin.css?v=20260928d" rel="stylesheet"/>
+</head>
+<body>
+<div class="frame"><p style="text-align:center;color:#e2c17c;font:12px Arial;margin:0 0 20px">DESIGN PREVIEW · All wallet controls disabled</p>
+<div class="card">
+<div class="header">
+<div class="dc-brand">DARK COIN</div>
+<span class="sigil">⚔️</span>
+<h1>Dungeon Store</h1>
+<p class="subtitle">Champions who invest, conquer.</p>
+</div>
+<div class="divider"><span>✦</span></div>
+<div id="loading" style="display:none">
+<div class="spinner"></div>
+<p class="loading-text">Retrieving your purchase scroll…</p>
+</div>
+<div id="main" style="display:block">
+<div class="item-card">
+<span class="item-emoji" id="itemEmoji">⚡</span>
+<div class="item-name" id="itemName">Dungeon supplies</div>
+<div class="item-desc" id="itemDesc">Example item for visual review</div>
+<div class="item-price" id="itemPrice">Example price</div>
+</div>
+<p class="step-label" id="stepLabel">Step 1 — Connect your wallet</p>
+<div class="wallet-row">
+<button class="wallet-btn" disabled="" id="btn-pera" type="button">🔵 Pera</button>
+<button class="wallet-btn" disabled="" id="btn-defly" type="button">🟢 Defly</button>
+</div>
+<div class="wallet-addr" id="walletAddr"></div>
+<button class="btn btn-pay" disabled="" id="btnPay" style="display:block" type="button">
+        ⚔️ Confirm &amp; Pay
+      </button>
+<div class="status" id="status" style="display:none"></div>
+<p class="footer-note">
+        Link expires in 2 hours · Purchase ID: <span id="pidLabel">PREVIEW</span>
+</p>
+</div>
+</div>
+</div>
+
+</body>
+</html>
