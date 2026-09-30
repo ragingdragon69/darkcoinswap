@@ -20,20 +20,51 @@
   }
   const Pera = constructor(['peraWalletConnect.PeraWalletConnect','PeraWalletConnect']);
   const Defly = constructor(['deflyWalletConnect.DeflyWalletConnect','DeflyWalletConnect']);
+  const wallets = new Map();
+  function walletFor(Constructor) {
+    if(!wallets.has(Constructor)) wallets.set(Constructor,new Constructor());
+    return wallets.get(Constructor);
+  }
+  function useSession(wallet,accounts) {
+    const address=accounts.find(value=>value===request.address);
+    if(!address) return false;
+    activeWallet=wallet;connectedAddress=address;
+    wallet.connector?.on('disconnect',()=>{
+      if(activeWallet===wallet){connectedAddress=null;button.disabled=true;}
+    });
+    show('Wallet connected. Sign the 0 ALGO verification transaction.');
+    button.disabled=!valid();
+    return true;
+  }
   async function connect(Constructor) {
     if (busy || !valid() || !Constructor) return;
     busy=true;peraButton.disabled=true;deflyButton.disabled=true;button.disabled=true;
     try {
-      if(activeWallet) await activeWallet.disconnect().catch(()=>{});
-      activeWallet=new Constructor();
-      const accounts=await activeWallet.connect();
-      connectedAddress=accounts.find(value=>value===request.address) || null;
-      if(!connectedAddress){ show('Connect the wallet shown in your Discord verification request.');return; }
-      activeWallet.connector?.on('disconnect',()=>{connectedAddress=null;button.disabled=true;});
-      show('Wallet connected. Sign the 0 ALGO verification transaction.');
-      button.disabled=!valid();
+      const wallet=walletFor(Constructor);
+      const accounts=await wallet.connect();
+      if(!useSession(wallet,accounts)){
+        connectedAddress=null;
+        show('Connect the wallet shown in your Discord verification request.');
+      }
     } catch { show('Wallet connection was not completed. You can try connecting again.'); }
     finally { busy=false;peraButton.disabled=!Pera || !valid();deflyButton.disabled=!Defly || !valid(); }
+  }
+  async function restoreSession() {
+    // Restore the wallet provider's existing session; never extend its expiry or sign automatically.
+    busy=true;peraButton.disabled=true;deflyButton.disabled=true;
+    try {
+      for(const Constructor of [Pera,Defly]) {
+        if(!Constructor) continue;
+        try {
+          const wallet=walletFor(Constructor);
+          if(typeof wallet.reconnectSession!=='function') continue;
+          const accounts=await bounded(wallet.reconnectSession());
+          if(valid() && useSession(wallet,accounts)) break;
+        } catch { /* An absent/expired session falls back to the existing Connect buttons. */ }
+      }
+    } finally {
+      busy=false;peraButton.disabled=!Pera || !valid();deflyButton.disabled=!Defly || !valid();
+    }
   }
   async function bounded(promise) {
     let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('timeout')),12000);})]);}
@@ -83,6 +114,7 @@
   if(valid()){
     peraButton.disabled=!Pera;deflyButton.disabled=!Defly;
     show('Connect your wallet to continue.');
+    void restoreSession();
   }else{
     show('Open a current verification link from Discord to continue.');
   }
