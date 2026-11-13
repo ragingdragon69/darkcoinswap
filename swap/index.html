@@ -198,8 +198,8 @@
     </div>
 
     <p class="help">
-      After the transaction confirms, return to Discord<br>
-      and tap <strong>✅ I've Sent It</strong> — the bot verifies automatically.<br>
+      After the transaction confirms, return to Discord —<br>
+      your order message updates automatically when your payment is confirmed.<br>
       <br>
       <span style="color:var(--warn)">⏱ Link expires 30 minutes after generation.</span>
     </p>
@@ -397,7 +397,15 @@
 
       signBtn.textContent = '⏳ Submitting…';
 
-      const { txId } = await algodClient.sendRawTransaction(signedTxns).do();
+      // Pera/Defly may already have submitted the signed transaction themselves, in which case
+      // the network answers "already in ledger" — that means it went through, not that it failed.
+      let txId;
+      try {
+        ({ txId } = await algodClient.sendRawTransaction(signedTxns).do());
+      } catch (sendErr) {
+        if (!/already in ledger|already in pool|transaction already exists/i.test((sendErr && sendErr.message) || '')) throw sendErr;
+        txId = algosdk.decodeSignedTransaction(signedTxns[0]).txn.txID();
+      }
       await algosdk.waitForConfirmation(algodClient, txId, 6);
 
       setStep('step-sign', 'done');
@@ -410,8 +418,7 @@
 
       showStatus('success',
         '✅ ALGO sent on-chain!<br><br>' +
-        'Return to Discord and tap <strong>✅ I\'ve Sent It</strong> — ' +
-        'the bot will verify and send your GOLD automatically.'
+        'Return to Discord — your order message updates automatically when your payment is confirmed.'
       );
 
     } catch (err) {
