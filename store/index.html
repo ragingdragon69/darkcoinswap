@@ -508,7 +508,15 @@
       btnPay.textContent = '⏳ Submitting…';
       showStatus('⏳ Submitting to Algorand…', 'info');
 
-      var { txId } = await algodClient.sendRawTransaction(signedTxns).do();
+      // Pera/Defly may already have submitted the signed transaction themselves, in which case
+      // the network answers "already in ledger" — that means it went through, not that it failed.
+      var txId;
+      try {
+        ({ txId } = await algodClient.sendRawTransaction(signedTxns).do());
+      } catch (sendErr) {
+        if (!/already in ledger|already in pool|transaction already exists/i.test((sendErr && sendErr.message) || '')) throw sendErr;
+        txId = algosdk.decodeSignedTransaction(signedTxns[0]).txn.txID();
+      }
       await algosdk.waitForConfirmation(algodClient, txId, 8);
 
       // ⑤ Success
@@ -516,11 +524,11 @@
       btnPay.disabled    = false;
       btnPay.onclick     = null;
 
-      stepEl.textContent = 'Step 3 — Return to Discord and tap "✅ I\'ve Paid"';
+      stepEl.textContent = 'Step 3 — Return to Discord';
 
       showStatus(
         '<strong>✅ Payment confirmed on-chain!</strong><br><br>' +
-        'Return to Discord and click <strong>"✅ I\'ve Paid"</strong> to receive your item.<br><br>' +
+        'Return to Discord — your order message updates automatically when your payment is confirmed.<br><br>' +
         '<a href="https://allo.info/tx/' + txId + '" target="_blank">View on Allo ↗</a>',
         'success'
       );
